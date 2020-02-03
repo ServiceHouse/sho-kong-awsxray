@@ -15,6 +15,18 @@ local function isempty(s)
     return s == nil or s == ''
 end
 
+local function findEnv(url)
+    if url:find(".prd.") then
+        return "prd"
+    elseif url:find(".stg.") then
+        return "stg"
+    elseif url:find(".tst.") then
+        return "tst"
+    elseif url:find(".acc.") then
+        return "acc"
+    end
+end
+
 local function generateId()
     local random = math.random
     local template ='xxxxxxxxxxxxxxxx'
@@ -50,7 +62,7 @@ function SHOXrayPlugin:access(config)
     if not isempty(traceIdHeader) then
         local method =  kong.request.get_method()
         local url = kong.request.get_scheme() .. "://" .. kong.request.get_host() .. kong.request.get_path()
-
+        local env = findEnv(url)
         local traceId = traceIdHeader:match("Root=(.+)")
         local parentSegmentId = nil
         local parentSegment = nil
@@ -75,7 +87,7 @@ function SHOXrayPlugin:access(config)
         local segmentId = tostring(generateId())
         local subSegmentId = tostring(generateId())
         kong.ctx.plugin.subSegmentDoc = "\"id\": \"" .. subSegmentId .. "\", \"start_time\": ".. tostring(startTime) .. ", \"name\": \"".. url.."\", \"namespace\": \"remote\""
-        kong.ctx.plugin.segmentDoc = "\"trace_id\":\"" .. traceId .. "\", \"id\": \"" .. segmentId .. "\", \"start_time\": ".. tostring(startTime) .. ", \"name\": \"Kong\", \"origin\": \"AWS::ECS::Container\"" .. parentSegment
+        kong.ctx.plugin.segmentDoc = "\"trace_id\":\"" .. traceId .. "\", \"id\": \"" .. segmentId .. "\", \"start_time\": ".. tostring(startTime) .. ", \"name\": \"Kong-" .. env .. "\", \"origin\": \"AWS::ECS::Container\"" .. parentSegment
         kong.ctx.plugin.httpPart = ",\"http\": {\"request\" : { \"url\" : \"".. url .."\", \"method\" : \"".. method .."\"}"
         local inProgress = ",\"in_progress\": true"
         local header = "{\"format\": \"json\", \"version\": 1}"
