@@ -3,13 +3,10 @@
 --- DateTime: 29/11/2019 14:07
 ---
 
-local BasePlugin = require "kong.plugins.base_plugin"
-
-local SHOXrayPlugin = BasePlugin:extend()
-
-
-SHOXrayPlugin.VERSION  = "1.0.0"
-SHOXrayPlugin.PRIORITY = 10
+local SHOXrayPlugin = {
+    VERSION  = "3.0.0",
+    PRIORITY = 10,
+}
 
 local function isempty(s)
     return s == nil or s == ''
@@ -54,10 +51,6 @@ local function sendUDP(premature,msg,host,port)
     assert(udp:setpeername(host, port))
     assert(udp:send(msg))
     assert(udp:close())
-end
-
-function SHOXrayPlugin:new()
-    SHOXrayPlugin.super.new(self, "sho-kong-awsxray")
 end
 
 function SHOXrayPlugin:access(config)
